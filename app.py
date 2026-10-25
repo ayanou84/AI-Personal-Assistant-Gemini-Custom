@@ -16,6 +16,12 @@ with st.sidebar:
     st.header("⚙️ Konfigurasi Parameter")
     api_key = st.text_input("Groq API Key", type="password", help="Masukkan API Key Groq Anda")
     
+    # Menambahkan pilihan model agar Anda bisa menggantinya langsung dari UI jika diperlukan
+    model_choice = st.selectbox(
+        "Pilih Model LLM",
+        ["llama-3.1-8b-instant", "llama3-8b-8192"]
+    )
+    
     persona = st.selectbox(
         "Gaya Bahasa / Persona",
         ["Formal & Profesional", "Santai & Ramah", "Edukatif & Detail"]
@@ -56,10 +62,10 @@ if prompt := st.chat_input("Ketik pesan Anda di sini..."):
             {"role": m["role"], "content": m["content"]} for m in st.session_state.messages
         ]
 
-        # Generate respon dari model Llama yang aktif
+        # Generate respon dari model yang dipilih di sidebar
         with st.spinner("Sedang berpikir..."):
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=model_choice,
                 messages=messages_payload,
                 temperature=temperature,
             )
