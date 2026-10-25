@@ -25,7 +25,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 💡 Informasi")
-    st.info("Aplikasi ini ditenagai oleh model Llama 3.1 (8B Instant) via Groq API.")
+    st.info("Aplikasi ini ditenagai oleh model Llama via Groq API.")
 
 # 3. Inisialisasi Riwayat Percakapan (Memory)
 if "messages" not in st.session_state:
@@ -52,15 +52,14 @@ if prompt := st.chat_input("Ketik pesan Anda di sini..."):
         system_instruction = f"Anda adalah asisten AI yang membantu. Jawablah dengan gaya bahasa {persona}."
 
         # Susun payload percakapan
-    
         messages_payload = [{"role": "system", "content": system_instruction}] + [
             {"role": m["role"], "content": m["content"]} for m in st.session_state.messages
         ]
 
-        # Generate respon dari model Llama dengan indikator loading
+        # Generate respon dari model Llama yang aktif
         with st.spinner("Sedang berpikir..."):
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="llama-3.3-70b-versatile",
                 messages=messages_payload,
                 temperature=temperature,
             )
