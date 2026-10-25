@@ -1,4 +1,1 @@
-streamlit&gt;=1.30.0 
-langchain&gt;=0.1.0 
-langchain-groq&gt;=0.1.0 
-langchain-core&gt;=0.1.0
+groq
