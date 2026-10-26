@@ -53,7 +53,7 @@ if prompt := st.chat_input("Ketik pesan Anda di sini..."):
         
         # Menggunakan gemini-1.5-flash dengan system_instruction
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="Gemini 3.5 Flash Lite",
             system_instruction=system_instruction
         )
 
