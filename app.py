@@ -1,79 +1,80 @@
 import streamlit as st
-from groq import Groq
+import google.generativeai as genai
 
 # 1. Konfigurasi Tampilan Halaman
 st.set_page_config(
-    page_title="AI Chatbot Assistant",
+    page_title="Gemini AI Chatbot",
     page_icon="🤖",
     layout="centered"
 )
 
-st.title("🤖 AI Personal Assistant")
-st.caption("Final Project Data Scientist - Chatbot Berbasis LLM")
+st.title("🤖 AI Personal Assistant (Gemini)")
+st.caption("Final Project - Chatbot Berbasis Google Gemini")
 
-# 2. Sidebar Konfigurasi & Parameter Kreatif
+# 2. Sidebar Konfigurasi & Parameter
 with st.sidebar:
     st.header("⚙️ Konfigurasi Parameter")
-    api_key = st.text_input("Groq API Key", type="password", help="Masukkan API Key Groq Anda")
-    
-    # Menambahkan pilihan model agar Anda bisa menggantinya langsung dari UI jika diperlukan
-    model_choice = st.selectbox(
-        "Pilih Model LLM",
-        ["llama-3.1-8b-instant", "llama3-8b-8192"]
-    )
+    api_key = st.text_input("Gemini API Key", type="password", help="Masukkan Gemini API Key Anda")
     
     persona = st.selectbox(
         "Gaya Bahasa / Persona",
         ["Formal & Profesional", "Santai & Ramah", "Edukatif & Detail"]
     )
     
-    temperature = st.slider("Kreativitas (Temperature)", 0.0, 1.0, 0.7)
-    
     st.markdown("---")
     st.markdown("### 💡 Informasi")
-    st.info("Aplikasi ini ditenagai oleh model Llama via Groq API.")
+    st.info("Aplikasi ini ditenagai oleh model Google Gemini (gemini-1.5-flash).")
 
 # 3. Inisialisasi Riwayat Percakapan (Memory)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. Tampilkan Riwayat Percakapan
+# 4. Tampilkan Riwayat Percakapan di UI
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-# 5. Area Input Pengguna & Pemprosesan Respon
+# 5. Area Input Pengguna & Pemrosesan Respon
 if prompt := st.chat_input("Ketik pesan Anda di sini..."):
     if not api_key:
-        st.error("Silakan masukkan Groq API Key terlebih dahulu di sidebar!")
+        st.error("Silakan masukkan Gemini API Key di sidebar terlebih dahulu!")
         st.stop()
 
-    # Tampilkan pesan user di UI & simpan di memory
+    # Tampilkan pesan user ke UI & simpan ke session state
     st.chat_message("user").write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Panggil API Groq
+    # Panggil API Google Generative AI
     try:
-        client = Groq(api_key=api_key)
+        genai.configure(api_key=api_key)
+        
+        # Konfigurasi instruksi sistem berdasarkan persona yang dipilih
         system_instruction = f"Anda adalah asisten AI yang membantu. Jawablah dengan gaya bahasa {persona}."
+        
+        # Menggunakan gemini-1.5-flash dengan system_instruction
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=system_instruction
+        )
 
-        # Susun payload percakapan
-        messages_payload = [{"role": "system", "content": system_instruction}] + [
-            {"role": m["role"], "content": m["content"]} for m in st.session_state.messages
-        ]
+        # Ubah format riwayat chat Streamlit agar sesuai dengan format history Gemini
+        gemini_history = []
+        for m in st.session_state.messages[:-1]: # Ambil riwayat sebelum pesan terbaru
+            # Gemini menggunakan role 'user' dan 'model'
+            role = "user" if m["role"] == "user" else "model"
+            gemini_history.append({"role": role, "parts": [m["content"]]})
 
-        # Generate respon dari model yang dipilih di sidebar
+        # Mulai sesi chat dengan membawa memori percakapan sebelumnya
+        chat_session = model.start_chat(history=gemini_history)
+
+        # Generate respon dari model dengan indikator loading
         with st.spinner("Sedang berpikir..."):
-            response = client.chat.completions.create(
-                model=model_choice,
-                messages=messages_payload,
-                temperature=temperature,
-            )
-            bot_response = response.choices[0].message.content
+            response = chat_session.send_message(prompt)
+            bot_response = response.text
 
-        # Tampilkan respon bot di UI & simpan di memory
+        # Tampilkan respon bot ke UI & simpan ke session state
         st.chat_message("assistant").write(bot_response)
         st.session_state.messages.append({"role": "assistant", "content": bot_response})
 
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat memanggil API: {e}")
+        st.error(f"Terjadi kesalahan saat memanggil API Gemini: {e}")
