@@ -23,7 +23,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 💡 Informasi")
-    st.info("Aplikasi ini ditenagai oleh model Google Gemini (gemini-1.5-flash).")
+    st.info("Aplikasi ini ditenagai oleh model Google Gemini (gemini-3.5-flash-lite).")
 
 # 3. Inisialisasi Riwayat Percakapan (Memory)
 if "messages" not in st.session_state:
